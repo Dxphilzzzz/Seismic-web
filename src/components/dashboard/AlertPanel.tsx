@@ -2,14 +2,15 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle, CheckCircle, Bell, ShieldAlert } from "lucide-react";
-import { getAlertLevel } from "@/utils";
+import { cn, getAlertLevel } from "@/utils";
 import type { SeismicReading } from "@/types";
 
 interface AlertPanelProps {
   liveData: SeismicReading | null;
+  isDarkMode?: boolean;
 }
 
-export function AlertPanel({ liveData }: AlertPanelProps) {
+export function AlertPanel({ liveData, isDarkMode = false }: AlertPanelProps) {
   const magnitude = liveData?.magnitude ?? 0;
   const alert = getAlertLevel(magnitude);
 
@@ -25,15 +26,18 @@ export function AlertPanel({ liveData }: AlertPanelProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.7 }}
-      className="glass-card rounded-2xl p-5 mb-6"
+      className={cn(
+        "mb-6 rounded-2xl p-5",
+        isDarkMode ? "border border-white/10 bg-[#475569]/90" : "border border-slate-200 bg-white/90 shadow-sm"
+      )}
     >
-      <div className="flex items-center gap-3 mb-5">
-        <div className="w-9 h-9 rounded-xl bg-accent-red/10 border border-accent-red/20 flex items-center justify-center">
-          <Bell className="w-5 h-5 text-accent-red" />
+      <div className="mb-5 flex items-center gap-3">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-accent-red/20 bg-accent-red/10">
+          <Bell className="h-5 w-5 text-accent-red" />
         </div>
         <div>
-          <h2 className="text-base font-semibold text-white">Alert Center</h2>
-          <p className="text-xs text-gray-500">
+          <h2 className={cn("text-base font-semibold", isDarkMode ? "text-white" : "text-slate-900")}>Alert Center</h2>
+          <p className={cn("text-xs", isDarkMode ? "text-gray-500" : "text-slate-500")}>
             Automated seismic threshold monitoring
           </p>
         </div>

@@ -36,4 +36,37 @@ export interface ChartDataPoint {
   y: number;
   z: number;
   timestamp: number;
+  status?: IntensityStatus;
+}
+
+export interface SensorNode {
+  id: string;
+  name: string;
+  lastSeen: number;
+  online: boolean;
+  batteryVoltage: number;
+  solarVoltage: number;
+  firmware: string;
+}
+
+export interface SensorWithState extends SensorNode {
+  computedOnline: boolean;
+  unreachable: boolean;
+  ageMs: number;
+}
+
+export interface AlertEvent {
+  id: string;
+  sensorId: string;
+  sensorName?: string;
+  type: "offline" | "recovered";
+  timestamp: number;
+}
+
+export interface AdminToast {
+  id: string;
+  sensorId: string;
+  message: string;
+  type: "offline" | "recovered";
+  timestamp: number;
 }

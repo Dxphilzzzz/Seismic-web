@@ -1,56 +1,37 @@
 "use client";
 
 import { motion } from "framer-motion";
-import {
-  Activity,
-  AlertTriangle,
-  TrendingUp,
-  Database,
-  Clock,
-  Server,
-} from "lucide-react";
-import { cn, getStatusBg, formatTimestamp, getMagnitudeColor } from "@/utils";
-import type { SeismicReading, SeismicHistoryEntry } from "@/types";
+import { Activity, AlertTriangle, Clock, Database, Server, TrendingUp } from "lucide-react";
+import type { SeismicHistoryEntry, SeismicReading } from "@/types";
+import { cn, formatTimestamp, getMagnitudeColor, getStatusBg } from "@/utils";
 
 interface KPICardsProps {
   liveData: SeismicReading | null;
   history: SeismicHistoryEntry[];
   isConnected: boolean;
   isLoading: boolean;
+  isDarkMode?: boolean;
 }
 
-export function KPICards({
-  liveData,
-  history,
-  isConnected,
-  isLoading,
-}: KPICardsProps) {
-  const peakMagnitude = history.length
-    ? Math.max(...history.map((h) => h.magnitude))
-    : 0;
+export function KPICards({ liveData, history, isConnected, isLoading, isDarkMode = false }: KPICardsProps) {
+  const peakMagnitude = history.length ? Math.max(...history.map((h) => h.magnitude)) : 0;
   const lastEvent = history[0];
 
   const cards = [
     {
       id: "magnitude",
       label: "Current Magnitude",
-      value: liveData ? liveData.magnitude.toFixed(3) : "—",
+      value: liveData ? liveData.magnitude.toFixed(3) : "-",
       icon: Activity,
       color: liveData ? getMagnitudeColor(liveData.magnitude) : "#3B82F6",
-      sub: "m/s²",
-      glow: true,
+      sub: "m/s2",
     },
     {
       id: "intensity",
       label: "Current Intensity",
-      value: liveData?.status ?? "—",
+      value: liveData?.status ?? "-",
       icon: AlertTriangle,
-      color:
-        liveData?.status === "STRONG"
-          ? "#EF4444"
-          : liveData?.status === "MODERATE"
-          ? "#F59E0B"
-          : "#10B981",
+      color: liveData ? getMagnitudeColor(liveData.magnitude) : "#22C55E",
       sub: "Seismic Level",
       badge: true,
       status: liveData?.status,
@@ -58,7 +39,7 @@ export function KPICards({
     {
       id: "peak",
       label: "Peak Magnitude",
-      value: peakMagnitude ? peakMagnitude.toFixed(3) : "—",
+      value: peakMagnitude ? peakMagnitude.toFixed(3) : "-",
       icon: TrendingUp,
       color: "#F59E0B",
       sub: "Today's highest",
@@ -74,92 +55,80 @@ export function KPICards({
     {
       id: "lastEvent",
       label: "Last Event",
-      value: lastEvent ? formatTimestamp(lastEvent.timestamp).split(",")[1]?.trim() ?? "—" : "—",
+      value: lastEvent ? formatTimestamp(lastEvent.timestamp).split(",")[1]?.trim() || "-" : "-",
       icon: Clock,
       color: "#8B5CF6",
-      sub: lastEvent
-        ? formatTimestamp(lastEvent.timestamp).split(",")[0]
-        : "No events",
+      sub: lastEvent ? formatTimestamp(lastEvent.timestamp).split(",")[0] : "No events",
     },
     {
       id: "health",
       label: "System Health",
       value: isConnected ? "ONLINE" : "OFFLINE",
       icon: Server,
-      color: isConnected ? "#10B981" : "#EF4444",
+      color: isConnected ? "#22C55E" : "#EF4444",
       sub: isConnected ? "Firebase connected" : "Connection lost",
     },
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
-      {cards.map((card, i) => {
+    <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      {cards.map((card, index) => {
         const Icon = card.icon;
         return (
           <motion.div
             key={card.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: i * 0.07 }}
+            transition={{ duration: 0.4, delay: index * 0.05 }}
             className={cn(
-              "glass-card glass-card-hover rounded-xl p-4 relative overflow-hidden",
-              card.id === "intensity" &&
-                liveData?.status === "STRONG" &&
-                "alert-strong"
+              "relative overflow-hidden rounded-xl p-4",
+              isDarkMode
+                ? "border border-white/10 bg-[#475569]/90 text-slate-100"
+                : "border border-slate-200 bg-white/90 text-slate-800 shadow-sm",
+              card.id === "intensity" && liveData?.status === "STRONG" && "alert-strong"
             )}
           >
-            {/* Background glow */}
             <div
-              className="absolute inset-0 opacity-5 rounded-xl"
+              className="absolute inset-0 opacity-5"
               style={{
                 background: `radial-gradient(ellipse at top right, ${card.color}, transparent 70%)`,
               }}
             />
 
             <div className="relative">
-              {/* Icon */}
-              <div className="flex items-center justify-between mb-3">
+              <div className="mb-3 flex items-center justify-between">
                 <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg"
                   style={{ background: `${card.color}18`, border: `1px solid ${card.color}30` }}
                 >
-                  <Icon className="w-4 h-4" style={{ color: card.color }} />
+                  <Icon className="h-4 w-4" style={{ color: card.color }} />
                 </div>
-                {isLoading && (
-                  <span className="w-2 h-2 rounded-full bg-accent-blue/50 animate-pulse" />
-                )}
+                {isLoading && <span className="h-2 w-2 animate-pulse rounded-full bg-accent-blue/50" />}
               </div>
 
-              {/* Label */}
-              <p className="text-xs text-gray-500 font-medium mb-2 uppercase tracking-wider truncate">
+              <p className={cn("mb-2 truncate text-xs font-medium uppercase tracking-wider", isDarkMode ? "text-slate-200" : "text-slate-600")}>
                 {card.label}
               </p>
 
-              {/* Value */}
               {card.badge && card.status ? (
                 <div
                   className={cn(
-                    "inline-flex items-center px-2 py-1 rounded-md text-sm font-bold border font-mono",
-                    getStatusBg(card.status as "WEAK" | "MODERATE" | "STRONG")
+                    "inline-flex items-center rounded-md border px-2 py-1 font-mono text-sm font-bold",
+                    getStatusBg(card.status)
                   )}
                 >
-                  {isLoading ? "..." : card.value}
+                  {card.value}
                 </div>
               ) : (
                 <p
-                  className="text-2xl font-bold font-mono tabular-nums truncate"
+                  className="truncate font-mono text-2xl font-bold tabular-nums"
                   style={{ color: card.color }}
                 >
-                  {isLoading ? (
-                    <span className="animate-pulse text-gray-600">---</span>
-                  ) : (
-                    card.value
-                  )}
+                  {isLoading ? <span className="animate-pulse text-gray-600">...</span> : card.value}
                 </p>
               )}
 
-              {/* Sub */}
-              <p className="text-xs text-gray-600 mt-1 truncate">{card.sub}</p>
+              <p className={cn("mt-1 truncate text-xs", isDarkMode ? "text-slate-300" : "text-slate-500")}>{card.sub}</p>
             </div>
           </motion.div>
         );

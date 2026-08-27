@@ -1,128 +1,91 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ref, onValue, off, query, limitToLast, orderByKey } from "firebase/database";
 import { db } from "@/lib/firebase";
 import type { SeismicReading, SeismicHistoryEntry, ChartDataPoint } from "@/types";
-import { formatTime } from "@/utils";
-import { toast } from "sonner";
+import { classifyMagnitude, formatTime, normalizeTimestamp } from "@/utils";
 
 const MAX_CHART_POINTS = 100;
 const MAX_HISTORY_DISPLAY = 500;
 
+function normalizeReading(id: string, value: Partial<SeismicReading>): SeismicHistoryEntry {
+  const magnitude = Number(value.magnitude ?? 0);
+
+  return {
+    id,
+    timestamp: normalizeTimestamp(value.timestamp),
+    magnitude,
+    x: Number(value.x ?? 0),
+    y: Number(value.y ?? 0),
+    z: Number(value.z ?? 0),
+    status: value.status ?? classifyMagnitude(magnitude),
+  };
+}
+
 export function useSeismicData() {
-  const [liveData, setLiveData] = useState<SeismicReading | null>(null);
   const [history, setHistory] = useState<SeismicHistoryEntry[]>([]);
-  const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
-  const prevStatusRef = useRef<string | null>(null);
-  const isFirstLoad = useRef(true);
-
-  const addChartPoint = useCallback((reading: SeismicReading) => {
-    const point: ChartDataPoint = {
-      time: formatTime(reading.timestamp || Date.now()),
-      magnitude: reading.magnitude,
-      x: reading.x,
-      y: reading.y,
-      z: reading.z,
-      timestamp: reading.timestamp || Date.now(),
-    };
-
-    setChartData((prev) => {
-      const next = [...prev, point];
-      return next.length > MAX_CHART_POINTS
-        ? next.slice(next.length - MAX_CHART_POINTS)
-        : next;
-    });
-  }, []);
-
   useEffect(() => {
-    // Live data listener
-    const liveRef = ref(db, "/seismic/live");
+    const connectedRef = ref(db, ".info/connected");
+    const readingsRef = query(ref(db, "/readings"), orderByKey(), limitToLast(MAX_HISTORY_DISPLAY));
 
-    const unsubLive = onValue(
-      liveRef,
+    const unsubConnected = onValue(connectedRef, (snapshot) => {
+      setIsConnected(Boolean(snapshot.val()));
+    });
+
+    const unsubReadings = onValue(
+      readingsRef,
       (snapshot) => {
-        setIsConnected(true);
         setIsLoading(false);
         setError(null);
 
-        const data = snapshot.val() as SeismicReading | null;
-        if (data) {
-          setLiveData(data);
-          setLastUpdate(new Date());
-          addChartPoint(data);
+        const data = snapshot.val() as Record<string, Partial<SeismicReading>> | null;
+        const entries = data
+          ? Object.entries(data)
+              .map(([id, value]) => normalizeReading(id, value))
+              .sort((a, b) => b.timestamp - a.timestamp)
+          : [];
 
-          // Alert on status change
-          if (!isFirstLoad.current && prevStatusRef.current !== data.status) {
-            if (data.status === "STRONG") {
-              toast.error("⚠️ STRONG seismic activity detected!", {
-                duration: 5000,
-              });
-            } else if (data.status === "MODERATE") {
-              toast.warning("⚡ Moderate seismic activity detected", {
-                duration: 4000,
-              });
-            } else if (
-              prevStatusRef.current === "STRONG" ||
-              prevStatusRef.current === "MODERATE"
-            ) {
-              toast.success("✓ Seismic activity returned to normal", {
-                duration: 3000,
-              });
-            }
-          }
-          prevStatusRef.current = data.status;
-          isFirstLoad.current = false;
-        }
+        setHistory(entries);
+        if (entries[0]) setLastUpdate(new Date(entries[0].timestamp));
       },
       (err) => {
-        setIsConnected(false);
         setIsLoading(false);
         setError(err.message);
-        toast.error("Firebase connection error: " + err.message);
       }
     );
 
-    // History listener
-    const historyRef = query(
-      ref(db, "/seismic/history"),
-      orderByKey(),
-      limitToLast(MAX_HISTORY_DISPLAY)
-    );
-
-    const unsubHistory = onValue(
-      historyRef,
-      (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-          const entries: SeismicHistoryEntry[] = Object.entries(data).map(
-            ([id, val]) => ({
-              id,
-              ...(val as SeismicReading),
-            })
-          );
-          entries.sort((a, b) => b.timestamp - a.timestamp);
-          setHistory(entries);
-        }
-      },
-      (err) => {
-        console.error("History error:", err);
-      }
-    );
-
-    // Cleanup
     return () => {
-      off(liveRef);
-      off(historyRef);
-      unsubLive();
-      unsubHistory();
+      off(connectedRef);
+      off(readingsRef);
+      unsubConnected();
+      unsubReadings();
     };
-  }, [addChartPoint]);
+  }, []);
+
+  const liveData = history[0] ?? null;
+
+  const chartData = useMemo<ChartDataPoint[]>(
+    () =>
+      [...history]
+        .reverse()
+        .slice(-MAX_CHART_POINTS)
+        .map((reading) => ({
+          time: formatTime(reading.timestamp),
+          magnitude: reading.magnitude,
+          x: reading.x,
+          y: reading.y,
+          z: reading.z,
+          timestamp: reading.timestamp,
+          status: reading.status,
+        })),
+    [history]
+  );
 
   return {
     liveData,

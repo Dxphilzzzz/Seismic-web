@@ -8,24 +8,50 @@ import type {
   IntensityStatus,
 } from "@/types";
 
+export const SENSOR_TIMEOUT_MS = 60_000;
+export const NORMAL_THRESHOLD = 10.5;
+export const STRONG_THRESHOLD = 12;
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export function normalizeTimestamp(timestamp: number | undefined | null): number {
+  if (!timestamp || Number.isNaN(timestamp)) return Date.now();
+  return timestamp < 10_000_000_000 ? timestamp * 1000 : timestamp;
+}
+
+export function classifyMagnitude(magnitude: number): IntensityStatus {
+  if (magnitude >= STRONG_THRESHOLD) return "STRONG";
+  if (magnitude >= NORMAL_THRESHOLD) return "MODERATE";
+  return "WEAK";
+}
+
 export function formatTimestamp(timestamp: number): string {
   try {
-    return format(new Date(timestamp), "MMM dd, yyyy HH:mm:ss");
+    return format(new Date(normalizeTimestamp(timestamp)), "MMM dd, yyyy HH:mm:ss");
   } catch {
-    return "—";
+    return "-";
   }
 }
 
 export function formatTime(timestamp: number): string {
   try {
-    return format(new Date(timestamp), "HH:mm:ss");
+    return format(new Date(normalizeTimestamp(timestamp)), "HH:mm:ss");
   } catch {
-    return "—";
+    return "-";
   }
+}
+
+export function formatRelativeTime(timestamp: number, now = Date.now()): string {
+  const diff = Math.max(0, now - normalizeTimestamp(timestamp));
+  const seconds = Math.floor(diff / 1000);
+  if (seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
 }
 
 export function getStatusColor(status: IntensityStatus): string {
@@ -55,13 +81,13 @@ export function getStatusBg(status: IntensityStatus): string {
 }
 
 export function getMagnitudeColor(magnitude: number): string {
-  if (magnitude >= 12) return "#EF4444";
-  if (magnitude >= 10.5) return "#F59E0B";
-  return "#10B981";
+  if (magnitude >= STRONG_THRESHOLD) return "#EF4444";
+  if (magnitude >= NORMAL_THRESHOLD) return "#F59E0B";
+  return "#22C55E";
 }
 
 export function getAlertLevel(magnitude: number): AlertLevel {
-  if (magnitude >= 12) {
+  if (magnitude >= STRONG_THRESHOLD) {
     return {
       level: "HIGH",
       message: "HIGH SEISMIC ACTIVITY DETECTED",
@@ -70,7 +96,7 @@ export function getAlertLevel(magnitude: number): AlertLevel {
       color: "#EF4444",
     };
   }
-  if (magnitude >= 10.5) {
+  if (magnitude >= NORMAL_THRESHOLD) {
     return {
       level: "MODERATE",
       message: "MODERATE SEISMIC ACTIVITY",
@@ -84,13 +110,11 @@ export function getAlertLevel(magnitude: number): AlertLevel {
     message: "NORMAL CONDITIONS",
     description:
       "All seismic readings within normal parameters. System operating nominally.",
-    color: "#10B981",
+    color: "#22C55E",
   };
 }
 
-export function computeAnalytics(
-  history: SeismicHistoryEntry[]
-): AnalyticsData {
+export function computeAnalytics(history: SeismicHistoryEntry[]): AnalyticsData {
   if (history.length === 0) {
     return {
       averageMagnitude: 0,
@@ -106,32 +130,30 @@ export function computeAnalytics(
   const avg = magnitudes.reduce((a, b) => a + b, 0) / magnitudes.length;
   const peak = Math.max(...magnitudes);
   const lowest = Math.min(...magnitudes);
-
   const now = Date.now();
   const oneDayAgo = now - 24 * 60 * 60 * 1000;
-  const todayEvents = history.filter((h) => h.timestamp > oneDayAgo);
-
   const oneHourAgo = now - 60 * 60 * 1000;
-  const hourEvents = history.filter((h) => h.timestamp > oneHourAgo);
 
   const statusCounts = history.reduce(
     (acc, h) => {
-      acc[h.status] = (acc[h.status] || 0) + 1;
+      const status = h.status || classifyMagnitude(h.magnitude);
+      acc[status] = (acc[status] || 0) + 1;
       return acc;
     },
-    {} as Record<string, number>
+    {} as Record<IntensityStatus, number>
   );
 
-  const mostFrequent = Object.entries(statusCounts).sort(
-    ([, a], [, b]) => b - a
-  )[0]?.[0] as IntensityStatus || "WEAK";
+  const mostFrequent =
+    (Object.entries(statusCounts).sort(([, a], [, b]) => b - a)[0]?.[0] as
+      | IntensityStatus
+      | undefined) || "WEAK";
 
   return {
     averageMagnitude: avg,
     peakMagnitude: peak,
     lowestMagnitude: lowest,
-    dailyEventCount: todayEvents.length,
-    eventsPerHour: hourEvents.length,
+    dailyEventCount: history.filter((h) => normalizeTimestamp(h.timestamp) > oneDayAgo).length,
+    eventsPerHour: history.filter((h) => normalizeTimestamp(h.timestamp) > oneHourAgo).length,
     mostFrequentIntensity: mostFrequent,
   };
 }
@@ -148,7 +170,7 @@ export function exportCSV(data: SeismicHistoryEntry[]): void {
   ]);
 
   const csv = [headers, ...rows].map((r) => r.join(",")).join("\n");
-  const blob = new Blob([csv], { type: "text/csv" });
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;

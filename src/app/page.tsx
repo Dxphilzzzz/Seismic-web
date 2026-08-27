@@ -1,12 +1,4 @@
-"use client";
-
-import dynamic from "next/dynamic";
-import { LoadingScreen } from "@/components/dashboard/LoadingScreen";
-
-const Dashboard = dynamic(
-  () => import("@/components/dashboard/Dashboard"),
-  { ssr: false, loading: () => <LoadingScreen /> }
-);
+import Dashboard from "@/components/dashboard/Dashboard";
 
 export default function Page() {
   return <Dashboard />;
