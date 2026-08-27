@@ -31,6 +31,14 @@ export function useSeismicData() {
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
   useEffect(() => {
+    if (!db) {
+      setIsLoading(false);
+      setError(null);
+      setHistory([]);
+      setLastUpdate(null);
+      return;
+    }
+
     const connectedRef = ref(db, ".info/connected");
     const readingsRef = query(ref(db, "/readings"), orderByKey(), limitToLast(MAX_HISTORY_DISPLAY));
 

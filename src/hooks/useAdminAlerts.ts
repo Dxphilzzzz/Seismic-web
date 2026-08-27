@@ -14,12 +14,13 @@ export function useAdminAlerts(sensors: SensorWithState[], user: User | null) {
   const hasInitialized = useRef(false);
 
   useEffect(() => {
-    if (!user) {
+    if (!user || !db) {
       setAlerts([]);
       return;
     }
 
-    const alertsRef = query(ref(db, "/alerts"), orderByChild("timestamp"), limitToLast(50));
+    const database = db;
+    const alertsRef = query(ref(database, "/alerts"), orderByChild("timestamp"), limitToLast(50));
     const unsub = onValue(alertsRef, (snapshot) => {
       const data = snapshot.val() as Record<string, Omit<AlertEvent, "id">> | null;
       const nextAlerts = data
@@ -37,14 +38,15 @@ export function useAdminAlerts(sensors: SensorWithState[], user: User | null) {
     });
 
     return () => {
-      off(ref(db, "/alerts"));
+      off(alertsRef);
       unsub();
     };
   }, [user]);
 
   useEffect(() => {
-    if (!user || sensors.length === 0) return;
+    if (!user || !db || sensors.length === 0) return;
 
+    const database = db;
     const previous = previousStates.current;
     const initialRun = !hasInitialized.current;
     const nextStates: Record<string, boolean> = {};
@@ -65,7 +67,7 @@ export function useAdminAlerts(sensors: SensorWithState[], user: User | null) {
           ? `Sensor ${sensor.name} unreachable`
           : `Sensor ${sensor.name} recovered`;
 
-      const alertRef = push(ref(db, "/alerts"));
+      const alertRef = push(ref(database, "/alerts"));
       void set(alertRef, {
         sensorId: sensor.id,
         sensorName: sensor.name,

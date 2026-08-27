@@ -1,6 +1,6 @@
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getDatabase } from "firebase/database";
-import { getAuth } from "firebase/auth";
+import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
+import { getDatabase, type Database } from "firebase/database";
+import { getAuth, type Auth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -12,7 +12,23 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-export const db = getDatabase(app);
-export const auth = getAuth(app);
+const hasFirebaseConfig = Boolean(
+  firebaseConfig.apiKey &&
+    firebaseConfig.authDomain &&
+    firebaseConfig.projectId &&
+    firebaseConfig.databaseURL &&
+    firebaseConfig.appId
+);
+
+let app: FirebaseApp | null = null;
+let db: Database | null = null;
+let auth: Auth | null = null;
+
+if (hasFirebaseConfig) {
+  app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+  db = getDatabase(app);
+  auth = getAuth(app);
+}
+
+export { app, db, auth };
 export default app;

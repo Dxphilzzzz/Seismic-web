@@ -40,6 +40,8 @@ export function useAuth() {
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
     const saved = window.localStorage.getItem(DEMO_STORAGE_KEY);
     if (saved) {
       try {
@@ -52,8 +54,15 @@ export function useAuth() {
       }
     }
 
+    if (!auth) {
+      setIsAuthLoading(false);
+      return;
+    }
+
     return onAuthStateChanged(auth, (nextUser) => {
-      setUser(nextUser ?? (window.localStorage.getItem(DEMO_STORAGE_KEY) ? createDemoUser(JSON.parse(window.localStorage.getItem(DEMO_STORAGE_KEY) ?? "{}").email ?? DEMO_ADMIN_EMAIL) : null));
+      const savedEmail = window.localStorage.getItem(DEMO_STORAGE_KEY);
+      const fallbackEmail = savedEmail ? JSON.parse(savedEmail).email ?? DEMO_ADMIN_EMAIL : null;
+      setUser(nextUser ?? (fallbackEmail ? createDemoUser(fallbackEmail) : null));
       setIsAuthLoading(false);
     });
   }, []);
@@ -71,11 +80,16 @@ export function useAuth() {
         return demoUser;
       }
 
+      if (!auth) {
+        throw new Error("Firebase auth is not configured. Use the demo admin account in local mode.");
+      }
+
       return signInWithEmailAndPassword(auth, email, password);
     },
     logOut: async () => {
       window.localStorage.removeItem(DEMO_STORAGE_KEY);
       setUser(null);
+      if (!auth) return undefined;
       return signOut(auth);
     },
   };

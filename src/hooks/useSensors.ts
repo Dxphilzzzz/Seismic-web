@@ -12,11 +12,18 @@ export function useSensors() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
     const interval = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(interval);
   }, []);
 
   useEffect(() => {
+    if (!db) {
+      setSensors([]);
+      setError(null);
+      return;
+    }
+
     const sensorsRef = ref(db, "/sensors");
     const unsub = onValue(
       sensorsRef,
