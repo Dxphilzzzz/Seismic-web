@@ -13,7 +13,13 @@ import {
   Table2,
 } from "lucide-react";
 import type { IntensityStatus, SeismicHistoryEntry } from "@/types";
-import { cn, exportCSV, exportExcel, formatTimestamp, getStatusBg } from "@/utils";
+import {
+  cn,
+  exportCSV,
+  exportExcel,
+  formatTimestamp,
+  getStatusBg,
+} from "@/utils";
 
 interface EventTableProps {
   history: SeismicHistoryEntry[];
@@ -59,7 +65,8 @@ export function EventTable({ history, isDarkMode = false }: EventTableProps) {
   const pageData = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   function handleSort(key: SortKey) {
-    if (sortKey === key) setSortDir((value) => (value === "asc" ? "desc" : "asc"));
+    if (sortKey === key)
+      setSortDir((value) => (value === "asc" ? "desc" : "asc"));
     else {
       setSortKey(key);
       setSortDir("desc");
@@ -73,8 +80,10 @@ export function EventTable({ history, isDarkMode = false }: EventTableProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.55 }}
       className={cn(
-        "mb-6 rounded-xl p-5",
-        isDarkMode ? "border border-white/10 bg-[#475569]/90" : "border border-slate-200 bg-white/90 shadow-sm"
+        "mb-4 rounded-2xl p-4 sm:p-5",
+        isDarkMode
+          ? "border border-white/10 bg-slate-900/80 shadow-sm shadow-black/20"
+          : "border border-slate-200 bg-white/90 shadow-sm",
       )}
     >
       <div className="mb-5 flex flex-col justify-between gap-4 md:flex-row md:items-center">
@@ -83,8 +92,20 @@ export function EventTable({ history, isDarkMode = false }: EventTableProps) {
             <Table2 className="h-5 w-5 text-accent-blue" />
           </div>
           <div>
-            <h2 className={cn("text-base font-semibold", isDarkMode ? "text-white" : "text-slate-900")}>Event Log</h2>
-            <p className={cn("text-xs", isDarkMode ? "text-gray-500" : "text-slate-500")}>
+            <h2
+              className={cn(
+                "text-base font-semibold",
+                isDarkMode ? "text-white" : "text-slate-900",
+              )}
+            >
+              Event Log
+            </h2>
+            <p
+              className={cn(
+                "text-xs",
+                isDarkMode ? "text-gray-500" : "text-slate-500",
+              )}
+            >
               {filtered.length} of {history.length} records
             </p>
           </div>
@@ -92,7 +113,12 @@ export function EventTable({ history, isDarkMode = false }: EventTableProps) {
 
         <div className="flex flex-wrap gap-2">
           <div className="relative">
-            <Search className={cn("absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2", isDarkMode ? "text-gray-500" : "text-slate-400")} />
+            <Search
+              className={cn(
+                "absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2",
+                isDarkMode ? "text-gray-500" : "text-slate-400",
+              )}
+            />
             <input
               type="text"
               placeholder="Search..."
@@ -105,7 +131,7 @@ export function EventTable({ history, isDarkMode = false }: EventTableProps) {
                 "w-44 rounded-lg border py-1.5 pl-8 pr-3 text-sm outline-none",
                 isDarkMode
                   ? "border-white/10 bg-slate-900/60 text-white placeholder:text-gray-600 focus:border-accent-blue/50"
-                  : "border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:border-accent-blue/50"
+                  : "border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:border-accent-blue/50",
               )}
             />
           </div>
@@ -120,7 +146,7 @@ export function EventTable({ history, isDarkMode = false }: EventTableProps) {
               "rounded-lg border px-3 py-1.5 text-sm outline-none",
               isDarkMode
                 ? "border-white/10 bg-slate-900/60 text-white focus:border-accent-blue/50"
-                : "border-slate-200 bg-slate-50 text-slate-800 focus:border-accent-blue/50"
+                : "border-slate-200 bg-slate-50 text-slate-800 focus:border-accent-blue/50",
             )}
           >
             <option value="ALL">All Status</option>
@@ -148,7 +174,12 @@ export function EventTable({ history, isDarkMode = false }: EventTableProps) {
         </div>
       </div>
 
-      <div className={cn("overflow-x-auto rounded-xl border", isDarkMode ? "border-white/5" : "border-slate-200")}>
+      <div
+        className={cn(
+          "overflow-x-auto rounded-xl border",
+          isDarkMode ? "border-white/5" : "border-slate-200",
+        )}
+      >
         <table className="w-full min-w-[760px] text-sm">
           <thead>
             <tr className={isDarkMode ? "bg-slate-900/50" : "bg-slate-50/80"}>
@@ -165,7 +196,9 @@ export function EventTable({ history, isDarkMode = false }: EventTableProps) {
                   onClick={() => handleSort(key as SortKey)}
                   className={cn(
                     "cursor-pointer select-none px-4 py-3 text-left text-xs font-medium uppercase tracking-wider transition-colors",
-                    isDarkMode ? "text-gray-400 hover:text-white" : "text-slate-500 hover:text-slate-800"
+                    isDarkMode
+                      ? "text-gray-400 hover:text-white"
+                      : "text-slate-500 hover:text-slate-800",
                   )}
                 >
                   <div className="flex items-center gap-1">
@@ -177,7 +210,12 @@ export function EventTable({ history, isDarkMode = false }: EventTableProps) {
                         <ChevronDown className="h-3 w-3 text-accent-blue" />
                       )
                     ) : (
-                      <ChevronUp className={cn("h-3 w-3", isDarkMode ? "text-gray-600" : "text-slate-300")} />
+                      <ChevronUp
+                        className={cn(
+                          "h-3 w-3",
+                          isDarkMode ? "text-gray-600" : "text-slate-300",
+                        )}
+                      />
                     )}
                   </div>
                 </th>
@@ -187,7 +225,13 @@ export function EventTable({ history, isDarkMode = false }: EventTableProps) {
           <tbody>
             {pageData.length === 0 ? (
               <tr>
-                <td colSpan={6} className={cn("px-4 py-12 text-center", isDarkMode ? "text-gray-600" : "text-slate-500")}>
+                <td
+                  colSpan={6}
+                  className={cn(
+                    "px-4 py-12 text-center",
+                    isDarkMode ? "text-gray-600" : "text-slate-500",
+                  )}
+                >
                   No events found
                 </td>
               </tr>
@@ -197,21 +241,34 @@ export function EventTable({ history, isDarkMode = false }: EventTableProps) {
                   key={row.id}
                   className={cn(
                     "border-t transition-colors",
-                    isDarkMode ? "border-white/5 hover:bg-slate-900/40" : "border-slate-200 hover:bg-slate-50",
-                    index === 0 && (isDarkMode ? "bg-accent-blue/5" : "bg-sky-50")
+                    isDarkMode
+                      ? "border-white/5 hover:bg-slate-900/40"
+                      : "border-slate-200 hover:bg-slate-50",
+                    index === 0 &&
+                      (isDarkMode ? "bg-accent-blue/5" : "bg-sky-50"),
                   )}
                 >
-                  <td className={cn("whitespace-nowrap px-4 py-3 font-mono text-xs", isDarkMode ? "text-gray-400" : "text-slate-500")}>
+                  <td
+                    className={cn(
+                      "whitespace-nowrap px-4 py-3 font-mono text-xs",
+                      isDarkMode ? "text-gray-400" : "text-slate-500",
+                    )}
+                  >
                     {formatTimestamp(row.timestamp)}
                   </td>
-                  <td className={cn("px-4 py-3 font-mono font-bold tabular-nums", isDarkMode ? "text-white" : "text-slate-900")}>
+                  <td
+                    className={cn(
+                      "px-4 py-3 font-mono font-bold tabular-nums",
+                      isDarkMode ? "text-white" : "text-slate-900",
+                    )}
+                  >
                     {row.magnitude.toFixed(4)}
                   </td>
                   <td className="px-4 py-3">
                     <span
                       className={cn(
                         "inline-flex rounded border px-2 py-0.5 font-mono text-xs font-bold",
-                        getStatusBg(row.status)
+                        getStatusBg(row.status),
                       )}
                     >
                       {row.status}
@@ -250,7 +307,9 @@ export function EventTable({ history, isDarkMode = false }: EventTableProps) {
             </button>
             <button
               type="button"
-              onClick={() => setPage((value) => Math.min(totalPages - 1, value + 1))}
+              onClick={() =>
+                setPage((value) => Math.min(totalPages - 1, value + 1))
+              }
               disabled={page >= totalPages - 1}
               className="rounded-lg border border-white/10 p-1.5 text-gray-400 transition-colors hover:border-accent-blue/50 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
               aria-label="Next page"

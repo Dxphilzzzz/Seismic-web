@@ -10,16 +10,21 @@ interface NotificationCenterProps {
   sensors: SensorWithState[];
 }
 
-export function NotificationCenter({ alerts, sensors }: NotificationCenterProps) {
+export function NotificationCenter({
+  alerts,
+  sensors,
+}: NotificationCenterProps) {
   const [open, setOpen] = useState(false);
 
   const unreadCount = useMemo(
     () => sensors.filter((sensor) => sensor.unreachable).length,
-    [sensors]
+    [sensors],
   );
 
   const latestSensorState = (sensorId: string) =>
-    sensors.find((sensor) => sensor.id === sensorId)?.unreachable ? "Still down" : "Recovered";
+    sensors.find((sensor) => sensor.id === sensorId)?.unreachable
+      ? "Still down"
+      : "Recovered";
 
   return (
     <div className="relative">
@@ -42,7 +47,9 @@ export function NotificationCenter({ alerts, sensors }: NotificationCenterProps)
           <div className="mb-3 flex items-center justify-between border-b border-white/5 pb-3">
             <div>
               <p className="text-sm font-semibold text-white">Notifications</p>
-              <p className="text-xs text-gray-500">{unreadCount} active sensor alerts</p>
+              <p className="text-xs text-gray-500">
+                {unreadCount} active sensor alerts
+              </p>
             </div>
             <span className="rounded-md border border-accent-blue/30 bg-accent-blue/10 px-2 py-1 font-mono text-xs text-accent-blue">
               {alerts.length}
@@ -64,7 +71,7 @@ export function NotificationCenter({ alerts, sensors }: NotificationCenterProps)
                       "rounded-lg border p-3",
                       offline
                         ? "border-accent-red/20 bg-accent-red/5"
-                        : "border-accent-green/20 bg-accent-green/5"
+                        : "border-accent-green/20 bg-accent-green/5",
                     )}
                   >
                     <div className="flex items-start gap-3">
@@ -78,7 +85,8 @@ export function NotificationCenter({ alerts, sensors }: NotificationCenterProps)
                           {alert.sensorName || alert.sensorId}
                         </p>
                         <p className="font-mono text-xs text-gray-500">
-                          {offline ? "Went offline" : "Recovered"} at {formatTimestamp(alert.timestamp)}
+                          {offline ? "Went offline" : "Recovered"} at{" "}
+                          {formatTimestamp(alert.timestamp)}
                         </p>
                       </div>
                       <span
@@ -86,7 +94,7 @@ export function NotificationCenter({ alerts, sensors }: NotificationCenterProps)
                           "rounded border px-2 py-0.5 text-[10px] font-bold uppercase",
                           latestSensorState(alert.sensorId) === "Still down"
                             ? "border-accent-red/30 bg-accent-red/10 text-accent-red"
-                            : "border-accent-green/30 bg-accent-green/10 text-accent-green"
+                            : "border-accent-green/30 bg-accent-green/10 text-accent-green",
                         )}
                       >
                         {latestSensorState(alert.sensorId)}

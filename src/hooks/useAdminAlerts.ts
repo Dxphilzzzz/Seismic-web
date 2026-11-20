@@ -1,7 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ref, onValue, off, push, set, query, orderByChild, limitToLast } from "firebase/database";
+import {
+  ref,
+  onValue,
+  off,
+  push,
+  set,
+  query,
+  orderByChild,
+  limitToLast,
+} from "firebase/database";
 import type { User } from "firebase/auth";
 import { db } from "@/lib/firebase";
 import type { AdminToast, AlertEvent, SensorWithState } from "@/types";
@@ -20,9 +29,16 @@ export function useAdminAlerts(sensors: SensorWithState[], user: User | null) {
     }
 
     const database = db;
-    const alertsRef = query(ref(database, "/alerts"), orderByChild("timestamp"), limitToLast(50));
+    const alertsRef = query(
+      ref(database, "/alerts"),
+      orderByChild("timestamp"),
+      limitToLast(50),
+    );
     const unsub = onValue(alertsRef, (snapshot) => {
-      const data = snapshot.val() as Record<string, Omit<AlertEvent, "id">> | null;
+      const data = snapshot.val() as Record<
+        string,
+        Omit<AlertEvent, "id">
+      > | null;
       const nextAlerts = data
         ? Object.entries(data)
             .map(([id, alert]) => ({
@@ -56,11 +72,17 @@ export function useAdminAlerts(sensors: SensorWithState[], user: User | null) {
       const wasOnline = previous[sensor.id];
       nextStates[sensor.id] = currentlyOnline;
 
-      if (initialRun || wasOnline === undefined || wasOnline === currentlyOnline) {
+      if (
+        initialRun ||
+        wasOnline === undefined ||
+        wasOnline === currentlyOnline
+      ) {
         return;
       }
 
-      const type: AlertEvent["type"] = currentlyOnline ? "recovered" : "offline";
+      const type: AlertEvent["type"] = currentlyOnline
+        ? "recovered"
+        : "offline";
       const timestamp = Date.now();
       const message =
         type === "offline"

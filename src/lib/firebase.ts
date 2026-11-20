@@ -14,10 +14,10 @@ const firebaseConfig = {
 
 const hasFirebaseConfig = Boolean(
   firebaseConfig.apiKey &&
-    firebaseConfig.authDomain &&
-    firebaseConfig.projectId &&
-    firebaseConfig.databaseURL &&
-    firebaseConfig.appId
+  firebaseConfig.authDomain &&
+  firebaseConfig.projectId &&
+  firebaseConfig.databaseURL &&
+  firebaseConfig.appId,
 );
 
 let app: FirebaseApp | null = null;

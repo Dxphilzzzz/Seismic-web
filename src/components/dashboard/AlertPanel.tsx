@@ -18,8 +18,8 @@ export function AlertPanel({ liveData, isDarkMode = false }: AlertPanelProps) {
     alert.level === "HIGH"
       ? ShieldAlert
       : alert.level === "MODERATE"
-      ? AlertTriangle
-      : CheckCircle;
+        ? AlertTriangle
+        : CheckCircle;
 
   return (
     <motion.div
@@ -28,7 +28,9 @@ export function AlertPanel({ liveData, isDarkMode = false }: AlertPanelProps) {
       transition={{ duration: 0.5, delay: 0.7 }}
       className={cn(
         "mb-6 rounded-2xl p-5",
-        isDarkMode ? "border border-white/10 bg-[#475569]/90" : "border border-slate-200 bg-white/90 shadow-sm"
+        isDarkMode
+          ? "border border-white/10 bg-[#475569]/90"
+          : "border border-slate-200 bg-white/90 shadow-sm",
       )}
     >
       <div className="mb-5 flex items-center gap-3">
@@ -36,8 +38,20 @@ export function AlertPanel({ liveData, isDarkMode = false }: AlertPanelProps) {
           <Bell className="h-5 w-5 text-accent-red" />
         </div>
         <div>
-          <h2 className={cn("text-base font-semibold", isDarkMode ? "text-white" : "text-slate-900")}>Alert Center</h2>
-          <p className={cn("text-xs", isDarkMode ? "text-gray-500" : "text-slate-500")}>
+          <h2
+            className={cn(
+              "text-base font-semibold",
+              isDarkMode ? "text-white" : "text-slate-900",
+            )}
+          >
+            Alert Center
+          </h2>
+          <p
+            className={cn(
+              "text-xs",
+              isDarkMode ? "text-gray-500" : "text-slate-500",
+            )}
+          >
             Automated seismic threshold monitoring
           </p>
         </div>
@@ -70,7 +84,10 @@ export function AlertPanel({ liveData, isDarkMode = false }: AlertPanelProps) {
               className={`w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 ${
                 alert.level === "HIGH" ? "alert-strong" : ""
               }`}
-              style={{ background: `${alert.color}15`, border: `2px solid ${alert.color}40` }}
+              style={{
+                background: `${alert.color}15`,
+                border: `2px solid ${alert.color}40`,
+              }}
             >
               <Icon className="w-8 h-8" style={{ color: alert.color }} />
             </div>
@@ -115,16 +132,33 @@ export function AlertPanel({ liveData, isDarkMode = false }: AlertPanelProps) {
           {/* Threshold reference */}
           <div className="relative mt-5 pt-4 border-t border-white/5 grid grid-cols-3 gap-4">
             {[
-              { label: "WEAK", range: "< 10.5", color: "#10B981", active: alert.level === "NORMAL" },
-              { label: "MODERATE", range: "10.5 – 12", color: "#F59E0B", active: alert.level === "MODERATE" },
-              { label: "STRONG", range: "≥ 12", color: "#EF4444", active: alert.level === "HIGH" },
+              {
+                label: "WEAK",
+                range: "< 10.5",
+                color: "#10B981",
+                active: alert.level === "NORMAL",
+              },
+              {
+                label: "MODERATE",
+                range: "10.5 – 12",
+                color: "#F59E0B",
+                active: alert.level === "MODERATE",
+              },
+              {
+                label: "STRONG",
+                range: "≥ 12",
+                color: "#EF4444",
+                active: alert.level === "HIGH",
+              },
             ].map((t) => (
               <div
                 key={t.label}
                 className="flex items-center gap-2 rounded-lg px-3 py-2"
                 style={{
                   background: t.active ? `${t.color}12` : "transparent",
-                  border: t.active ? `1px solid ${t.color}30` : "1px solid transparent",
+                  border: t.active
+                    ? `1px solid ${t.color}30`
+                    : "1px solid transparent",
                 }}
               >
                 <span

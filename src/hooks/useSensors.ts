@@ -28,7 +28,10 @@ export function useSensors() {
     const unsub = onValue(
       sensorsRef,
       (snapshot) => {
-        const data = snapshot.val() as Record<string, Omit<SensorNode, "id">> | null;
+        const data = snapshot.val() as Record<
+          string,
+          Omit<SensorNode, "id">
+        > | null;
         setSensors(
           data
             ? Object.entries(data)
@@ -42,11 +45,11 @@ export function useSensors() {
                   firmware: value.firmware || "-",
                 }))
                 .sort((a, b) => a.name.localeCompare(b.name))
-            : []
+            : [],
         );
         setError(null);
       },
-      (err) => setError(err.message)
+      (err) => setError(err.message),
     );
 
     return () => {
@@ -67,7 +70,7 @@ export function useSensors() {
           unreachable: !computedOnline,
         };
       }),
-    [sensors, now]
+    [sensors, now],
   );
 
   return { sensors: sensorStates, now, error };

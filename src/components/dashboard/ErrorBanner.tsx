@@ -16,7 +16,9 @@ export function ErrorBanner({ error }: ErrorBannerProps) {
     >
       <WifiOff className="w-5 h-5 text-accent-red flex-shrink-0" />
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-accent-red">Firebase Connection Error</p>
+        <p className="text-sm font-medium text-accent-red">
+          Firebase Connection Error
+        </p>
         <p className="text-xs text-gray-400 truncate">{error}</p>
       </div>
       <button

@@ -1,15 +1,29 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ref, onValue, off, query, limitToLast, orderByKey } from "firebase/database";
+import {
+  ref,
+  onValue,
+  off,
+  query,
+  limitToLast,
+  orderByKey,
+} from "firebase/database";
 import { db } from "@/lib/firebase";
-import type { SeismicReading, SeismicHistoryEntry, ChartDataPoint } from "@/types";
+import type {
+  SeismicReading,
+  SeismicHistoryEntry,
+  ChartDataPoint,
+} from "@/types";
 import { classifyMagnitude, formatTime, normalizeTimestamp } from "@/utils";
 
 const MAX_CHART_POINTS = 100;
 const MAX_HISTORY_DISPLAY = 500;
 
-function normalizeReading(id: string, value: Partial<SeismicReading>): SeismicHistoryEntry {
+function normalizeReading(
+  id: string,
+  value: Partial<SeismicReading>,
+): SeismicHistoryEntry {
   const magnitude = Number(value.magnitude ?? 0);
 
   return {
@@ -40,7 +54,11 @@ export function useSeismicData() {
     }
 
     const connectedRef = ref(db, ".info/connected");
-    const readingsRef = query(ref(db, "/readings"), orderByKey(), limitToLast(MAX_HISTORY_DISPLAY));
+    const readingsRef = query(
+      ref(db, "/readings"),
+      orderByKey(),
+      limitToLast(MAX_HISTORY_DISPLAY),
+    );
 
     const unsubConnected = onValue(connectedRef, (snapshot) => {
       setIsConnected(Boolean(snapshot.val()));
@@ -52,7 +70,10 @@ export function useSeismicData() {
         setIsLoading(false);
         setError(null);
 
-        const data = snapshot.val() as Record<string, Partial<SeismicReading>> | null;
+        const data = snapshot.val() as Record<
+          string,
+          Partial<SeismicReading>
+        > | null;
         const entries = data
           ? Object.entries(data)
               .map(([id, value]) => normalizeReading(id, value))
@@ -65,7 +86,7 @@ export function useSeismicData() {
       (err) => {
         setIsLoading(false);
         setError(err.message);
-      }
+      },
     );
 
     return () => {
@@ -92,7 +113,7 @@ export function useSeismicData() {
           timestamp: reading.timestamp,
           status: reading.status,
         })),
-    [history]
+    [history],
   );
 
   return {

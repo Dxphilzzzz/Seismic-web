@@ -23,10 +23,14 @@ export function AdminToasts({ toasts, onDismiss }: AdminToastsProps) {
               "flex items-center gap-3 rounded-xl border px-4 py-3 shadow-2xl backdrop-blur",
               offline
                 ? "border-accent-red/30 bg-[#2a1018]/95 text-accent-red"
-                : "border-accent-green/30 bg-[#0b241c]/95 text-accent-green"
+                : "border-accent-green/30 bg-[#0b241c]/95 text-accent-green",
             )}
           >
-            {offline ? <CircleAlert className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
+            {offline ? (
+              <CircleAlert className="h-4 w-4" />
+            ) : (
+              <CheckCircle2 className="h-4 w-4" />
+            )}
             <span className="min-w-0 flex-1 truncate text-sm font-medium text-white">
               {toast.message}
             </span>

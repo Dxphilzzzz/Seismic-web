@@ -49,7 +49,11 @@ const CustomTooltip = ({
   );
 };
 
-export function Seismograph({ chartData, currentMagnitude, isDarkMode = false }: SeismographProps) {
+export function Seismograph({
+  chartData,
+  currentMagnitude,
+  isDarkMode = false,
+}: SeismographProps) {
   const color = getMagnitudeColor(currentMagnitude);
   const currentStatus = classifyMagnitude(currentMagnitude);
 
@@ -59,8 +63,10 @@ export function Seismograph({ chartData, currentMagnitude, isDarkMode = false }:
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.3 }}
       className={cn(
-        "mb-6 rounded-xl p-5",
-        isDarkMode ? "border border-white/10 bg-[#475569]/90" : "border border-slate-200 bg-white/90 shadow-sm"
+        "mb-4 rounded-2xl p-4 sm:p-5",
+        isDarkMode
+          ? "border border-white/10 bg-slate-900/80 shadow-sm shadow-black/20"
+          : "border border-slate-200 bg-white/90 shadow-sm",
       )}
     >
       <div className="mb-5 flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
@@ -69,17 +75,41 @@ export function Seismograph({ chartData, currentMagnitude, isDarkMode = false }:
             <Activity className="h-5 w-5 text-accent-green" />
           </div>
           <div>
-            <h2 className={cn("text-base font-semibold", isDarkMode ? "text-white" : "text-slate-900")}>Live Seismograph</h2>
-            <p className={cn("text-xs", isDarkMode ? "text-gray-500" : "text-slate-500")}>
+            <h2
+              className={cn(
+                "text-base font-semibold",
+                isDarkMode ? "text-white" : "text-slate-900",
+              )}
+            >
+              Live Seismograph
+            </h2>
+            <p
+              className={cn(
+                "text-xs",
+                isDarkMode ? "text-gray-500" : "text-slate-500",
+              )}
+            >
               Real-time magnitude waveform - last 100 readings
             </p>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-4">
-          <LegendItem color="#22C55E" label="Normal <10.5" isDarkMode={isDarkMode} />
-          <LegendItem color="#F59E0B" label="Moderate <12" isDarkMode={isDarkMode} />
-          <LegendItem color="#EF4444" label="Strong >=12" isDarkMode={isDarkMode} />
+          <LegendItem
+            color="#22C55E"
+            label="Normal <10.5"
+            isDarkMode={isDarkMode}
+          />
+          <LegendItem
+            color="#F59E0B"
+            label="Moderate <12"
+            isDarkMode={isDarkMode}
+          />
+          <LegendItem
+            color="#EF4444"
+            label="Strong >=12"
+            isDarkMode={isDarkMode}
+          />
         </div>
       </div>
 
@@ -87,7 +117,10 @@ export function Seismograph({ chartData, currentMagnitude, isDarkMode = false }:
         <span className="font-mono text-xs uppercase tracking-widest text-gray-500">
           Current
         </span>
-        <span className="font-mono text-3xl font-bold tabular-nums" style={{ color }}>
+        <span
+          className="font-mono text-3xl font-bold tabular-nums"
+          style={{ color }}
+        >
           {currentMagnitude.toFixed(4)}
         </span>
         <span className="text-sm text-gray-500">m/s2</span>
@@ -97,14 +130,17 @@ export function Seismograph({ chartData, currentMagnitude, isDarkMode = false }:
         </span>
       </div>
 
-      <div className="h-72">
+      <div className="h-60">
         {chartData.length === 0 ? (
           <div className="flex h-full items-center justify-center text-gray-600">
             <p className="text-sm">Waiting for data...</p>
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ top: 8, right: 12, left: 0, bottom: 5 }}>
+            <AreaChart
+              data={chartData}
+              margin={{ top: 8, right: 12, left: 0, bottom: 5 }}
+            >
               <defs>
                 <linearGradient id="seismoGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor={color} stopOpacity={0.28} />
@@ -128,8 +164,18 @@ export function Seismograph({ chartData, currentMagnitude, isDarkMode = false }:
                 tickFormatter={(value) => Number(value).toFixed(1)}
               />
               <Tooltip content={<CustomTooltip />} />
-              <ReferenceLine y={10.5} stroke="#F59E0B" strokeDasharray="6 3" strokeOpacity={0.7} />
-              <ReferenceLine y={12} stroke="#EF4444" strokeDasharray="6 3" strokeOpacity={0.75} />
+              <ReferenceLine
+                y={10.5}
+                stroke="#F59E0B"
+                strokeDasharray="6 3"
+                strokeOpacity={0.7}
+              />
+              <ReferenceLine
+                y={12}
+                stroke="#EF4444"
+                strokeDasharray="6 3"
+                strokeOpacity={0.75}
+              />
               <Area
                 type="monotone"
                 dataKey="magnitude"
@@ -165,9 +211,22 @@ export function Seismograph({ chartData, currentMagnitude, isDarkMode = false }:
   );
 }
 
-function LegendItem({ color, label, isDarkMode = false }: { color: string; label: string; isDarkMode?: boolean }) {
+function LegendItem({
+  color,
+  label,
+  isDarkMode = false,
+}: {
+  color: string;
+  label: string;
+  isDarkMode?: boolean;
+}) {
   return (
-    <div className={cn("flex items-center gap-2", isDarkMode ? "text-gray-400" : "text-slate-500")}>
+    <div
+      className={cn(
+        "flex items-center gap-2",
+        isDarkMode ? "text-gray-400" : "text-slate-500",
+      )}
+    >
       <span className="h-2 w-2 rounded-full" style={{ background: color }} />
       <span className="text-xs">{label}</span>
     </div>

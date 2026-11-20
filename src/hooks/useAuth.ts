@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from "react";
 import type { User } from "firebase/auth";
-import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
+import {
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut,
+} from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
 const DEMO_ADMIN_EMAIL = "admin@seismic.local";
@@ -61,8 +65,12 @@ export function useAuth() {
 
     return onAuthStateChanged(auth, (nextUser) => {
       const savedEmail = window.localStorage.getItem(DEMO_STORAGE_KEY);
-      const fallbackEmail = savedEmail ? JSON.parse(savedEmail).email ?? DEMO_ADMIN_EMAIL : null;
-      setUser(nextUser ?? (fallbackEmail ? createDemoUser(fallbackEmail) : null));
+      const fallbackEmail = savedEmail
+        ? (JSON.parse(savedEmail).email ?? DEMO_ADMIN_EMAIL)
+        : null;
+      setUser(
+        nextUser ?? (fallbackEmail ? createDemoUser(fallbackEmail) : null),
+      );
       setIsAuthLoading(false);
     });
   }, []);
@@ -72,16 +80,24 @@ export function useAuth() {
     isAuthLoading,
     signIn: async (email: string, password: string) => {
       const trimmedEmail = email.trim().toLowerCase();
-      if (trimmedEmail === DEMO_ADMIN_EMAIL && password === DEMO_ADMIN_PASSWORD) {
+      if (
+        trimmedEmail === DEMO_ADMIN_EMAIL &&
+        password === DEMO_ADMIN_PASSWORD
+      ) {
         const demoUser = createDemoUser(trimmedEmail);
-        window.localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify({ email: trimmedEmail }));
+        window.localStorage.setItem(
+          DEMO_STORAGE_KEY,
+          JSON.stringify({ email: trimmedEmail }),
+        );
         setUser(demoUser);
         setIsAuthLoading(false);
         return demoUser;
       }
 
       if (!auth) {
-        throw new Error("Firebase auth is not configured. Use the demo admin account in local mode.");
+        throw new Error(
+          "Firebase auth is not configured. Use the demo admin account in local mode.",
+        );
       }
 
       return signInWithEmailAndPassword(auth, email, password);

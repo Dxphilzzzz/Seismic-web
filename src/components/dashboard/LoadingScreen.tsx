@@ -23,7 +23,9 @@ export function LoadingScreen() {
         </div>
 
         <div className="text-center">
-          <h2 className="mb-1 text-lg font-bold text-white">Connecting to Firebase</h2>
+          <h2 className="mb-1 text-lg font-bold text-white">
+            Connecting to Firebase
+          </h2>
           <p className="font-mono text-sm text-gray-500">
             Seismic Monitoring System - Initializing...
           </p>
@@ -35,7 +37,11 @@ export function LoadingScreen() {
               key={index}
               className="w-1.5 rounded-full bg-accent-blue"
               animate={{ height: ["8px", "24px", "8px"] }}
-              transition={{ duration: 0.8, repeat: Infinity, delay: index * 0.12 }}
+              transition={{
+                duration: 0.8,
+                repeat: Infinity,
+                delay: index * 0.12,
+              }}
             />
           ))}
         </div>

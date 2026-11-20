@@ -1,10 +1,25 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { BarChart3, BookOpen, FileText, House, Moon, PanelLeftClose, Settings, SunMedium, Users, Zap } from "lucide-react";
+import {
+  ClipboardList,
+  Megaphone,
+  Moon,
+  PanelLeftClose,
+  SunMedium,
+} from "lucide-react";
 import type { User } from "firebase/auth";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { useSeismicData } from "@/hooks/useSeismicData";
+import { useAnnouncements } from "@/hooks/useAnnouncements";
 import { Header } from "@/components/dashboard/Header";
 import { KPICards } from "@/components/dashboard/KPICards";
 import { Seismograph } from "@/components/charts/Seismograph";
@@ -16,6 +31,8 @@ import { LoadingScreen } from "@/components/dashboard/LoadingScreen";
 import { ErrorBanner } from "@/components/dashboard/ErrorBanner";
 import { SensorStatusPanel } from "@/components/dashboard/SensorStatusPanel";
 import { AdminToasts } from "@/components/dashboard/AdminToasts";
+import { AnnouncementBanner } from "@/components/dashboard/AnnouncementBanner";
+import { AdminAnnouncements } from "@/components/dashboard/AdminAnnouncements";
 import type { AdminToast, AlertEvent, SensorWithState } from "@/types";
 import { cn } from "@/utils";
 
@@ -41,6 +58,9 @@ export default function Dashboard({
   onLogout,
 }: DashboardProps) {
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [adminModal, setAdminModal] = useState<
+    "announcements" | "activities" | null
+  >(null);
 
   const {
     liveData,
@@ -51,9 +71,29 @@ export default function Dashboard({
     error,
     lastUpdate,
   } = useSeismicData();
+  const {
+    announcements,
+    activities,
+    createAnnouncement,
+    updateAnnouncement,
+    removeAnnouncement,
+  } = useAnnouncements();
 
   const trendData = useMemo(() => {
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthNames = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
     const monthTotals = new Map<string, number>();
 
     monthNames.forEach((month) => monthTotals.set(month, 0));
@@ -71,21 +111,16 @@ export default function Dashboard({
   }, [history]);
 
   const navItems = [
-    { label: "Reports", icon: FileText, active: true },
-    { label: "Library", icon: BookOpen },
-    { label: "People", icon: Users },
-    { label: "Activities", icon: BarChart3 },
-    { label: "Support", icon: Zap },
-    { label: "Get Started", icon: House },
-    { label: "Settings", icon: Settings },
+    { label: "Announcements", icon: Megaphone, view: "announcements" as const },
+    { label: "Activities", icon: ClipboardList, view: "activities" as const },
   ];
 
   const themeClasses = isDarkMode
     ? "bg-slate-950 text-slate-100"
-    : "bg-[#edf2f7] text-slate-900";
+    : "bg-slate-100/80 text-slate-900";
 
   const cardClasses = isDarkMode
-    ? "border border-white/10 bg-[#475569]/90 text-slate-100"
+    ? "border border-white/10 bg-slate-900/80 text-slate-100 shadow-sm shadow-black/20"
     : "border border-slate-200 bg-[#f8fafc] text-slate-800 shadow-sm";
 
   const downloadHistory = () => {
@@ -116,25 +151,38 @@ export default function Dashboard({
   if (isLoading) return <LoadingScreen />;
 
   return (
-    <main className={cn("min-h-screen transition-colors duration-300", themeClasses)}>
+    <main
+      className={cn(
+        "min-h-screen transition-colors duration-300",
+        themeClasses,
+      )}
+    >
       <div className="mx-auto flex min-h-screen max-w-[1600px]">
         {role === "admin" && (
           <aside
             className={cn(
               "hidden w-[220px] shrink-0 border-r p-5 lg:flex lg:flex-col",
-              isDarkMode ? "border-white/10 bg-slate-900/60" : "border-slate-200 bg-white/90"
+              isDarkMode
+                ? "border-white/10 bg-slate-900/60"
+                : "border-slate-200 bg-white/90",
             )}
           >
             <div className="mb-10 flex items-center justify-between">
               <div className="flex items-center gap-2 text-xl font-black tracking-tight">
                 <span className="text-rose-500">S</span>
-                <span className={cn(isDarkMode ? "text-white" : "text-slate-800")}>EIS</span>
+                <span
+                  className={cn(isDarkMode ? "text-white" : "text-slate-800")}
+                >
+                  EIS
+                </span>
               </div>
               <button
                 type="button"
                 className={cn(
                   "rounded-lg p-1.5 transition-colors",
-                  isDarkMode ? "bg-slate-800 text-slate-300 hover:bg-slate-700" : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                  isDarkMode
+                    ? "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                    : "bg-slate-100 text-slate-500 hover:bg-slate-200",
                 )}
                 aria-label="Collapse sidebar"
               >
@@ -143,19 +191,16 @@ export default function Dashboard({
             </div>
 
             <nav className="space-y-1.5">
-              {navItems.map(({ label, icon: Icon, active }) => (
+              {navItems.map(({ label, icon: Icon, view }) => (
                 <button
                   key={label}
                   type="button"
+                  onClick={() => setAdminModal(view)}
                   className={cn(
                     "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors",
-                    active
-                      ? isDarkMode
-                        ? "bg-sky-500/10 text-sky-300 ring-1 ring-sky-500/20"
-                        : "bg-sky-100 text-sky-700 ring-1 ring-sky-200"
-                      : isDarkMode
-                        ? "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
-                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    isDarkMode
+                      ? "text-slate-300 hover:bg-sky-500/10 hover:text-sky-300"
+                      : "text-slate-600 hover:bg-sky-50 hover:text-sky-700",
                   )}
                 >
                   <Icon className="h-4 w-4" />
@@ -170,12 +215,18 @@ export default function Dashboard({
                 onClick={() => setIsDarkMode((current) => !current)}
                 className={cn(
                   "flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
-                  isDarkMode ? "bg-slate-800 text-slate-200 hover:bg-slate-700" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  isDarkMode
+                    ? "bg-slate-800 text-slate-200 hover:bg-slate-700"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200",
                 )}
               >
                 <span>Theme</span>
                 <span className="inline-flex items-center gap-2">
-                  {isDarkMode ? <Moon className="h-4 w-4" /> : <SunMedium className="h-4 w-4" />}
+                  {isDarkMode ? (
+                    <Moon className="h-4 w-4" />
+                  ) : (
+                    <SunMedium className="h-4 w-4" />
+                  )}
                   {isDarkMode ? "Dark" : "Light"}
                 </span>
               </button>
@@ -199,8 +250,47 @@ export default function Dashboard({
             onToggleTheme={() => setIsDarkMode((current) => !current)}
           />
 
-          <div className="space-y-6 p-4 md:p-6">
+          {role === "public" && (
+            <AnnouncementBanner announcements={announcements} />
+          )}
+
+          {role === "admin" && adminModal && (
+            <AdminAnnouncements
+              view={adminModal}
+              onClose={() => setAdminModal(null)}
+              announcements={announcements}
+              activities={activities}
+              isDarkMode={isDarkMode}
+              onPublish={({ title, message, tone }) =>
+                createAnnouncement({
+                  title,
+                  message,
+                  tone,
+                  actor: user?.email ?? "Administrator",
+                })
+              }
+              onUpdate={(id, { title, message, tone }) =>
+                updateAnnouncement({
+                  id,
+                  title,
+                  message,
+                  tone,
+                  actor: user?.email ?? "Administrator",
+                })
+              }
+              onRemove={(id, title) =>
+                removeAnnouncement({
+                  id,
+                  title,
+                  actor: user?.email ?? "Administrator",
+                })
+              }
+            />
+          )}
+
+          <div className="mx-auto max-w-[1440px] space-y-4 p-4 md:p-6 lg:p-8">
             <KPICards
+              role={role}
               liveData={liveData}
               history={history}
               isConnected={isConnected}
@@ -208,14 +298,29 @@ export default function Dashboard({
               isDarkMode={isDarkMode}
             />
 
-            {role === "admin" && <SensorStatusPanel sensors={sensors} now={sensorNow} isDarkMode={isDarkMode} />}
+            {role === "admin" && (
+              <SensorStatusPanel
+                sensors={sensors}
+                now={sensorNow}
+                isDarkMode={isDarkMode}
+              />
+            )}
 
-            <div className="grid gap-6 xl:grid-cols-[1.4fr_0.6fr]">
-              <section className={cn("rounded-2xl p-5 shadow-sm", cardClasses)}>
-                <div className="mb-5 flex items-center justify-between gap-3">
+            <div className="grid gap-4 lg:grid-cols-3">
+              <section
+                className={cn(
+                  "rounded-2xl p-4 shadow-sm sm:p-5 lg:col-span-2",
+                  cardClasses,
+                )}
+              >
+                <div className="mb-3 flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">All-time trend</p>
-                    <h2 className="mt-1 text-xl font-semibold">Activity overview</h2>
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                      All-time trend
+                    </p>
+                    <h2 className="mt-1 text-xl font-semibold">
+                      Activity overview
+                    </h2>
                   </div>
                   <div className="flex items-center gap-2 rounded-lg border border-slate-200/60 bg-slate-100/70 px-2.5 py-1.5 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300">
                     <span className="h-2.5 w-2.5 rounded-full bg-sky-500" />
@@ -223,49 +328,102 @@ export default function Dashboard({
                   </div>
                 </div>
 
-                <div className="h-72 w-full">
+                <div className="h-56 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={trendData} barGap={8}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDarkMode ? "rgba(148,163,184,0.12)" : "rgba(15,23,42,0.08)"} />
-                      <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fill: isDarkMode ? "#94a3b8" : "#475569", fontSize: 12 }} />
-                      <YAxis tickLine={false} axisLine={false} tick={{ fill: isDarkMode ? "#94a3b8" : "#475569", fontSize: 12 }} />
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        vertical={false}
+                        stroke={
+                          isDarkMode
+                            ? "rgba(148,163,184,0.12)"
+                            : "rgba(15,23,42,0.08)"
+                        }
+                      />
+                      <XAxis
+                        dataKey="month"
+                        tickLine={false}
+                        axisLine={false}
+                        tick={{
+                          fill: isDarkMode ? "#94a3b8" : "#475569",
+                          fontSize: 12,
+                        }}
+                      />
+                      <YAxis
+                        tickLine={false}
+                        axisLine={false}
+                        tick={{
+                          fill: isDarkMode ? "#94a3b8" : "#475569",
+                          fontSize: 12,
+                        }}
+                      />
                       <Tooltip
-                        cursor={{ fill: isDarkMode ? "rgba(148,163,184,0.06)" : "rgba(15,23,42,0.05)" }}
+                        cursor={{
+                          fill: isDarkMode
+                            ? "rgba(148,163,184,0.06)"
+                            : "rgba(15,23,42,0.05)",
+                        }}
                         contentStyle={{
                           background: isDarkMode ? "#0f172a" : "#fff",
-                          border: isDarkMode ? "1px solid rgba(148,163,184,0.2)" : "1px solid rgba(148,163,184,0.5)",
+                          border: isDarkMode
+                            ? "1px solid rgba(148,163,184,0.2)"
+                            : "1px solid rgba(148,163,184,0.5)",
                           borderRadius: 12,
                           color: isDarkMode ? "#e2e8f0" : "#0f172a",
                         }}
                       />
-                      <Bar dataKey="count" radius={[6, 6, 0, 0]} fill="#4f9cf7" />
+                      <Bar
+                        dataKey="count"
+                        radius={[6, 6, 0, 0]}
+                        fill="#4f9cf7"
+                      />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               </section>
 
-              <div className={cn("rounded-2xl p-5 shadow-sm", cardClasses)}>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Overview</p>
-                <div className="mt-4 space-y-4">
+              <div
+                className={cn("rounded-2xl p-4 shadow-sm sm:p-5", cardClasses)}
+              >
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                  Overview
+                </p>
+                <div className="mt-4 grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
                   <div>
                     <p className="text-sm text-slate-500">Live output</p>
-                    <p className="mt-1 font-mono text-2xl font-bold">{liveData ? liveData.magnitude.toFixed(3) : "-"}</p>
+                    <p className="mt-1 font-mono text-2xl font-bold">
+                      {liveData ? liveData.magnitude.toFixed(3) : "-"}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-slate-500">Connection</p>
-                    <p className={cn("mt-1 text-lg font-semibold", isConnected ? "text-emerald-500" : "text-red-500")}>{isConnected ? "Live" : "Offline"}</p>
+                    <p
+                      className={cn(
+                        "mt-1 text-lg font-semibold",
+                        isConnected ? "text-emerald-500" : "text-red-500",
+                      )}
+                    >
+                      {isConnected ? "Live" : "Offline"}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-slate-500">Last update</p>
-                    <p className="mt-1 font-mono text-sm">{lastUpdate?.toLocaleTimeString() ?? "Waiting for readings"}</p>
+                    <p className="mt-1 font-mono text-sm">
+                      {lastUpdate?.toLocaleTimeString() ??
+                        "Waiting for readings"}
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <Seismograph chartData={chartData} currentMagnitude={liveData?.magnitude ?? 0} isDarkMode={isDarkMode} />
+            <Seismograph
+              chartData={chartData}
+              currentMagnitude={liveData?.magnitude ?? 0}
+              isDarkMode={isDarkMode}
+            />
 
-            <div className="mb-6 grid gap-6 xl:grid-cols-2">
+            <div className="mb-4 grid gap-4 xl:grid-cols-2">
               <XYZChart chartData={chartData} isDarkMode={isDarkMode} />
               <MagnitudeHistory history={history} isDarkMode={isDarkMode} />
             </div>
@@ -278,8 +436,16 @@ export default function Dashboard({
               <AdminToasts toasts={toasts} onDismiss={onDismissToast} />
             )}
 
-            <footer className={cn("border-t py-6 text-center font-mono text-xs", isDarkMode ? "border-white/5 text-gray-700" : "border-slate-200 text-slate-500")}>
-              Solar-Powered IoT Seismic Intensity Monitoring and Early Warning System
+            <footer
+              className={cn(
+                "border-t py-6 text-center font-mono text-xs",
+                isDarkMode
+                  ? "border-white/5 text-gray-700"
+                  : "border-slate-200 text-slate-500",
+              )}
+            >
+              Solar-Powered IoT Seismic Intensity Monitoring and Early Warning
+              System
               {" - "}
               ESP32 + MPU6050 + Firebase RTDB
               {" - "}

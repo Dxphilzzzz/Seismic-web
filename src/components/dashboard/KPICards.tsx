@@ -1,11 +1,19 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Activity, AlertTriangle, Clock, Database, Server, TrendingUp } from "lucide-react";
+import {
+  Activity,
+  AlertTriangle,
+  Clock,
+  Database,
+  Server,
+  TrendingUp,
+} from "lucide-react";
 import type { SeismicHistoryEntry, SeismicReading } from "@/types";
 import { cn, formatTimestamp, getMagnitudeColor, getStatusBg } from "@/utils";
 
 interface KPICardsProps {
+  role?: "public" | "admin";
   liveData: SeismicReading | null;
   history: SeismicHistoryEntry[];
   isConnected: boolean;
@@ -13,11 +21,20 @@ interface KPICardsProps {
   isDarkMode?: boolean;
 }
 
-export function KPICards({ liveData, history, isConnected, isLoading, isDarkMode = false }: KPICardsProps) {
-  const peakMagnitude = history.length ? Math.max(...history.map((h) => h.magnitude)) : 0;
+export function KPICards({
+  role = "public",
+  liveData,
+  history,
+  isConnected,
+  isLoading,
+  isDarkMode = false,
+}: KPICardsProps) {
+  const peakMagnitude = history.length
+    ? Math.max(...history.map((h) => h.magnitude))
+    : 0;
   const lastEvent = history[0];
 
-  const cards = [
+  const allCards = [
     {
       id: "magnitude",
       label: "Current Magnitude",
@@ -55,10 +72,14 @@ export function KPICards({ liveData, history, isConnected, isLoading, isDarkMode
     {
       id: "lastEvent",
       label: "Last Event",
-      value: lastEvent ? formatTimestamp(lastEvent.timestamp).split(",")[1]?.trim() || "-" : "-",
+      value: lastEvent
+        ? formatTimestamp(lastEvent.timestamp).split(",")[1]?.trim() || "-"
+        : "-",
       icon: Clock,
       color: "#8B5CF6",
-      sub: lastEvent ? formatTimestamp(lastEvent.timestamp).split(",")[0] : "No events",
+      sub: lastEvent
+        ? formatTimestamp(lastEvent.timestamp).split(",")[0]
+        : "No events",
     },
     {
       id: "health",
@@ -70,8 +91,20 @@ export function KPICards({ liveData, history, isConnected, isLoading, isDarkMode
     },
   ];
 
+  const cards =
+    role === "public"
+      ? allCards.filter((card) =>
+          ["magnitude", "intensity", "peak", "health"].includes(card.id),
+        )
+      : allCards;
+
   return (
-    <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+    <div
+      className={cn(
+        "mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2",
+        role === "public" ? "lg:grid-cols-4" : "lg:grid-cols-3 2xl:grid-cols-6",
+      )}
+    >
       {cards.map((card, index) => {
         const Icon = card.icon;
         return (
@@ -81,11 +114,13 @@ export function KPICards({ liveData, history, isConnected, isLoading, isDarkMode
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: index * 0.05 }}
             className={cn(
-              "relative overflow-hidden rounded-xl p-4",
+              "relative overflow-hidden rounded-2xl p-4 transition-shadow duration-200 hover:shadow-md",
               isDarkMode
                 ? "border border-white/10 bg-[#475569]/90 text-slate-100"
                 : "border border-slate-200 bg-white/90 text-slate-800 shadow-sm",
-              card.id === "intensity" && liveData?.status === "STRONG" && "alert-strong"
+              card.id === "intensity" &&
+                liveData?.status === "STRONG" &&
+                "alert-strong",
             )}
           >
             <div
@@ -96,17 +131,27 @@ export function KPICards({ liveData, history, isConnected, isLoading, isDarkMode
             />
 
             <div className="relative">
-              <div className="mb-3 flex items-center justify-between">
+              <div className="mb-2.5 flex items-center justify-between">
                 <div
-                  className="flex h-8 w-8 items-center justify-center rounded-lg"
-                  style={{ background: `${card.color}18`, border: `1px solid ${card.color}30` }}
+                  className="flex h-7 w-7 items-center justify-center rounded-lg"
+                  style={{
+                    background: `${card.color}18`,
+                    border: `1px solid ${card.color}30`,
+                  }}
                 >
-                  <Icon className="h-4 w-4" style={{ color: card.color }} />
+                  <Icon className="h-3.5 w-3.5" style={{ color: card.color }} />
                 </div>
-                {isLoading && <span className="h-2 w-2 animate-pulse rounded-full bg-accent-blue/50" />}
+                {isLoading && (
+                  <span className="h-2 w-2 animate-pulse rounded-full bg-accent-blue/50" />
+                )}
               </div>
 
-              <p className={cn("mb-2 truncate text-xs font-medium uppercase tracking-wider", isDarkMode ? "text-slate-200" : "text-slate-600")}>
+              <p
+                className={cn(
+                  "mb-1.5 truncate text-[11px] font-semibold uppercase tracking-[0.12em]",
+                  isDarkMode ? "text-slate-200" : "text-slate-600",
+                )}
+              >
                 {card.label}
               </p>
 
@@ -114,21 +159,32 @@ export function KPICards({ liveData, history, isConnected, isLoading, isDarkMode
                 <div
                   className={cn(
                     "inline-flex items-center rounded-md border px-2 py-1 font-mono text-sm font-bold",
-                    getStatusBg(card.status)
+                    getStatusBg(card.status),
                   )}
                 >
                   {card.value}
                 </div>
               ) : (
                 <p
-                  className="truncate font-mono text-2xl font-bold tabular-nums"
+                  className="truncate font-mono text-xl font-bold tabular-nums"
                   style={{ color: card.color }}
                 >
-                  {isLoading ? <span className="animate-pulse text-gray-600">...</span> : card.value}
+                  {isLoading ? (
+                    <span className="animate-pulse text-gray-600">...</span>
+                  ) : (
+                    card.value
+                  )}
                 </p>
               )}
 
-              <p className={cn("mt-1 truncate text-xs", isDarkMode ? "text-slate-300" : "text-slate-500")}>{card.sub}</p>
+              <p
+                className={cn(
+                  "mt-1 truncate text-xs",
+                  isDarkMode ? "text-slate-300" : "text-slate-500",
+                )}
+              >
+                {card.sub}
+              </p>
             </div>
           </motion.div>
         );

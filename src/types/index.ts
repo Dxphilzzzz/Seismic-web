@@ -70,3 +70,24 @@ export interface AdminToast {
   type: "offline" | "recovered";
   timestamp: number;
 }
+
+export type AnnouncementTone = "info" | "maintenance" | "warning";
+
+export interface Announcement {
+  id: string;
+  title: string;
+  message: string;
+  tone: AnnouncementTone;
+  active: boolean;
+  createdAt: number;
+  createdBy: string;
+}
+
+export interface ActivityLogEntry {
+  id: string;
+  type:
+    "announcement_created" | "announcement_updated" | "announcement_removed";
+  message: string;
+  timestamp: number;
+  actor: string;
+}

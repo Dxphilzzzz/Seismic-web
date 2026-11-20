@@ -16,7 +16,9 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function normalizeTimestamp(timestamp: number | undefined | null): number {
+export function normalizeTimestamp(
+  timestamp: number | undefined | null,
+): number {
   if (!timestamp || Number.isNaN(timestamp)) return Date.now();
   return timestamp < 10_000_000_000 ? timestamp * 1000 : timestamp;
 }
@@ -29,7 +31,10 @@ export function classifyMagnitude(magnitude: number): IntensityStatus {
 
 export function formatTimestamp(timestamp: number): string {
   try {
-    return format(new Date(normalizeTimestamp(timestamp)), "MMM dd, yyyy HH:mm:ss");
+    return format(
+      new Date(normalizeTimestamp(timestamp)),
+      "MMM dd, yyyy HH:mm:ss",
+    );
   } catch {
     return "-";
   }
@@ -43,7 +48,10 @@ export function formatTime(timestamp: number): string {
   }
 }
 
-export function formatRelativeTime(timestamp: number, now = Date.now()): string {
+export function formatRelativeTime(
+  timestamp: number,
+  now = Date.now(),
+): string {
   const diff = Math.max(0, now - normalizeTimestamp(timestamp));
   const seconds = Math.floor(diff / 1000);
   if (seconds < 60) return `${seconds}s ago`;
@@ -114,7 +122,9 @@ export function getAlertLevel(magnitude: number): AlertLevel {
   };
 }
 
-export function computeAnalytics(history: SeismicHistoryEntry[]): AnalyticsData {
+export function computeAnalytics(
+  history: SeismicHistoryEntry[],
+): AnalyticsData {
   if (history.length === 0) {
     return {
       averageMagnitude: 0,
@@ -140,20 +150,23 @@ export function computeAnalytics(history: SeismicHistoryEntry[]): AnalyticsData 
       acc[status] = (acc[status] || 0) + 1;
       return acc;
     },
-    {} as Record<IntensityStatus, number>
+    {} as Record<IntensityStatus, number>,
   );
 
   const mostFrequent =
     (Object.entries(statusCounts).sort(([, a], [, b]) => b - a)[0]?.[0] as
-      | IntensityStatus
-      | undefined) || "WEAK";
+      IntensityStatus | undefined) || "WEAK";
 
   return {
     averageMagnitude: avg,
     peakMagnitude: peak,
     lowestMagnitude: lowest,
-    dailyEventCount: history.filter((h) => normalizeTimestamp(h.timestamp) > oneDayAgo).length,
-    eventsPerHour: history.filter((h) => normalizeTimestamp(h.timestamp) > oneHourAgo).length,
+    dailyEventCount: history.filter(
+      (h) => normalizeTimestamp(h.timestamp) > oneDayAgo,
+    ).length,
+    eventsPerHour: history.filter(
+      (h) => normalizeTimestamp(h.timestamp) > oneHourAgo,
+    ).length,
     mostFrequentIntensity: mostFrequent,
   };
 }
@@ -189,12 +202,12 @@ export async function exportExcel(data: SeismicHistoryEntry[]): Promise<void> {
       X: d.x,
       Y: d.y,
       Z: d.z,
-    }))
+    })),
   );
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Seismic Events");
   XLSX.writeFile(
     wb,
-    `seismic-events-${format(new Date(), "yyyyMMdd-HHmmss")}.xlsx`
+    `seismic-events-${format(new Date(), "yyyyMMdd-HHmmss")}.xlsx`,
   );
 }
