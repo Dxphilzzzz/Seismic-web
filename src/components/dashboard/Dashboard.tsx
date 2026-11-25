@@ -6,6 +6,7 @@ import {
   Megaphone,
   Moon,
   PanelLeftClose,
+  PanelLeftOpen,
   SunMedium,
 } from "lucide-react";
 import type { User } from "firebase/auth";
@@ -58,6 +59,7 @@ export default function Dashboard({
   onLogout,
 }: DashboardProps) {
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [adminModal, setAdminModal] = useState<
     "announcements" | "activities" | null
   >(null);
@@ -161,23 +163,17 @@ export default function Dashboard({
         {role === "admin" && (
           <aside
             className={cn(
-              "hidden w-[220px] shrink-0 border-r p-5 lg:flex lg:flex-col",
+              "hidden shrink-0 border-r p-5 transition-[width] duration-200 lg:flex lg:flex-col",
+              isSidebarCollapsed ? "w-[76px]" : "w-[220px]",
               isDarkMode
                 ? "border-white/10 bg-slate-900/60"
                 : "border-slate-200 bg-white/90",
             )}
           >
             <div className="mb-10 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-xl font-black tracking-tight">
-                <span className="text-rose-500">S</span>
-                <span
-                  className={cn(isDarkMode ? "text-white" : "text-slate-800")}
-                >
-                  EIS
-                </span>
-              </div>
               <button
                 type="button"
+                onClick={() => setIsSidebarCollapsed((current) => !current)}
                 className={cn(
                   "rounded-lg p-1.5 transition-colors",
                   isDarkMode
@@ -185,8 +181,13 @@ export default function Dashboard({
                     : "bg-slate-100 text-slate-500 hover:bg-slate-200",
                 )}
                 aria-label="Collapse sidebar"
+                title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
               >
-                <PanelLeftClose className="h-4 w-4" />
+                {isSidebarCollapsed ? (
+                  <PanelLeftOpen className="h-4 w-4" />
+                ) : (
+                  <PanelLeftClose className="h-4 w-4" />
+                )}
               </button>
             </div>
 
@@ -196,15 +197,17 @@ export default function Dashboard({
                   key={label}
                   type="button"
                   onClick={() => setAdminModal(view)}
+                  title={isSidebarCollapsed ? label : undefined}
                   className={cn(
                     "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors",
+                    isSidebarCollapsed && "justify-center",
                     isDarkMode
                       ? "text-slate-300 hover:bg-sky-500/10 hover:text-sky-300"
                       : "text-slate-600 hover:bg-sky-50 hover:text-sky-700",
                   )}
                 >
                   <Icon className="h-4 w-4" />
-                  {label}
+                  {!isSidebarCollapsed && label}
                 </button>
               ))}
             </nav>
@@ -220,7 +223,7 @@ export default function Dashboard({
                     : "bg-slate-100 text-slate-700 hover:bg-slate-200",
                 )}
               >
-                <span>Theme</span>
+                {!isSidebarCollapsed && <span>Theme</span>}
                 <span className="inline-flex items-center gap-2">
                   {isDarkMode ? (
                     <Moon className="h-4 w-4" />
@@ -446,8 +449,6 @@ export default function Dashboard({
             >
               Solar-Powered IoT Seismic Intensity Monitoring and Early Warning
               System
-              {" - "}
-              ESP32 + MPU6050 + Firebase RTDB
               {" - "}
               Capstone Research Project
             </footer>

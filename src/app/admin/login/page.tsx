@@ -117,7 +117,7 @@ export default function AdminLoginPage() {
             <div className="mb-5 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-sm text-amber-700">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="h-4 w-4" />
-                Demo account: admin@seismic.local / admin123
+                Test account: admin@seismic.local / admin123
               </div>
             </div>
 

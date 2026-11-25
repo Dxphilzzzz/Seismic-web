@@ -54,8 +54,10 @@ export function useSeismicData() {
     }
 
     const connectedRef = ref(db, ".info/connected");
+    const readingsPath =
+      process.env.NEXT_PUBLIC_FIREBASE_READINGS_PATH || "/readings";
     const readingsRef = query(
-      ref(db, "/readings"),
+      ref(db, readingsPath),
       orderByKey(),
       limitToLast(MAX_HISTORY_DISPLAY),
     );

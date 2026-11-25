@@ -59,15 +59,7 @@ Add your environment variables in the Vercel dashboard under **Settings → Envi
 ## Firebase Database Structure
 
 ```
-/seismic/live
-  magnitude: number
-  status: "WEAK" | "MODERATE" | "STRONG"
-  x: number
-  y: number
-  z: number
-  timestamp: number
-
-/seismic/history/{timestamp}
+/readings/{readingId}
   magnitude: number
   status: "WEAK" | "MODERATE" | "STRONG"
   x: number

@@ -2,40 +2,29 @@
 
 import { useEffect, useState } from "react";
 import type { User } from "firebase/auth";
-import {
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  signOut,
-} from "firebase/auth";
-import { auth } from "@/lib/firebase";
 
-const DEMO_ADMIN_EMAIL = "admin@seismic.local";
-const DEMO_ADMIN_PASSWORD = "admin123";
-const DEMO_STORAGE_KEY = "seismic-demo-admin";
+export const TEST_ADMIN_EMAIL = "admin@seismic.local";
+export const TEST_ADMIN_PASSWORD = "admin123";
 
-function createDemoUser(email: string): User {
-  const timestamp = Date.now();
+const TEST_SESSION_KEY = "seismic-test-admin";
 
+function createTestUser(email: string): User {
   return {
-    uid: "demo-admin",
+    uid: "test-admin",
     email,
     emailVerified: true,
-    displayName: "Demo Admin",
+    displayName: "Test Admin",
     isAnonymous: false,
     photoURL: null,
     providerData: [],
-    providerId: "demo",
-    refreshToken: "demo-refresh-token",
+    providerId: "test",
     tenantId: null,
-    metadata: {
-      creationTime: new Date(timestamp).toISOString(),
-      lastSignInTime: new Date(timestamp).toISOString(),
-    },
-    getIdToken: async () => "demo-token",
-    getIdTokenResult: async () => ({ token: "demo-token" }) as never,
+    metadata: {},
+    getIdToken: async () => "test-token",
+    getIdTokenResult: async () => ({ token: "test-token" }) as never,
     reload: async () => undefined,
     delete: async () => undefined,
-    toJSON: () => ({ uid: "demo-admin", email }),
+    toJSON: () => ({ uid: "test-admin", email }),
   } as unknown as User;
 }
 
@@ -44,69 +33,32 @@ export function useAuth() {
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const saved = window.localStorage.getItem(DEMO_STORAGE_KEY);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved) as { email?: string };
-        if (parsed.email) {
-          setUser(createDemoUser(parsed.email));
-        }
-      } catch {
-        window.localStorage.removeItem(DEMO_STORAGE_KEY);
-      }
-    }
-
-    if (!auth) {
-      setIsAuthLoading(false);
-      return;
-    }
-
-    return onAuthStateChanged(auth, (nextUser) => {
-      const savedEmail = window.localStorage.getItem(DEMO_STORAGE_KEY);
-      const fallbackEmail = savedEmail
-        ? (JSON.parse(savedEmail).email ?? DEMO_ADMIN_EMAIL)
-        : null;
-      setUser(
-        nextUser ?? (fallbackEmail ? createDemoUser(fallbackEmail) : null),
-      );
-      setIsAuthLoading(false);
-    });
+    const savedEmail = window.localStorage.getItem(TEST_SESSION_KEY);
+    setUser(savedEmail ? createTestUser(savedEmail) : null);
+    setIsAuthLoading(false);
   }, []);
 
   return {
     user,
     isAuthLoading,
     signIn: async (email: string, password: string) => {
-      const trimmedEmail = email.trim().toLowerCase();
+      const normalizedEmail = email.trim().toLowerCase();
       if (
-        trimmedEmail === DEMO_ADMIN_EMAIL &&
-        password === DEMO_ADMIN_PASSWORD
+        normalizedEmail !== TEST_ADMIN_EMAIL ||
+        password !== TEST_ADMIN_PASSWORD
       ) {
-        const demoUser = createDemoUser(trimmedEmail);
-        window.localStorage.setItem(
-          DEMO_STORAGE_KEY,
-          JSON.stringify({ email: trimmedEmail }),
-        );
-        setUser(demoUser);
-        setIsAuthLoading(false);
-        return demoUser;
+        throw new Error("Invalid test admin credentials.");
       }
 
-      if (!auth) {
-        throw new Error(
-          "Firebase auth is not configured. Use the demo admin account in local mode.",
-        );
-      }
-
-      return signInWithEmailAndPassword(auth, email, password);
+      window.localStorage.setItem(TEST_SESSION_KEY, normalizedEmail);
+      const testUser = createTestUser(normalizedEmail);
+      setUser(testUser);
+      setIsAuthLoading(false);
+      return testUser;
     },
     logOut: async () => {
-      window.localStorage.removeItem(DEMO_STORAGE_KEY);
+      window.localStorage.removeItem(TEST_SESSION_KEY);
       setUser(null);
-      if (!auth) return undefined;
-      return signOut(auth);
     },
   };
 }

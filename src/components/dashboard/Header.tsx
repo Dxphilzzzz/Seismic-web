@@ -10,7 +10,6 @@ import {
   Download,
   LogOut,
   Moon,
-  Satellite,
   ShieldCheck,
   SunMedium,
   Wifi,
@@ -219,36 +218,33 @@ export function Header({
 
       <div
         className={cn(
-          "mt-5 grid gap-3 border-t pt-4 sm:grid-cols-2 lg:grid-cols-3",
+          "mt-5 grid gap-3 border-t pt-4 sm:grid-cols-2",
+          isAdmin ? "lg:grid-cols-3" : "lg:grid-cols-2",
           isDarkMode ? "border-white/5" : "border-slate-200",
         )}
       >
-        <div
-          className={cn(
-            "flex items-center gap-2 rounded-xl px-3 py-2",
-            isDarkMode ? "bg-white/5" : "bg-slate-50",
-          )}
-        >
-          <Satellite
+        {isAdmin && (
+          <div
             className={cn(
-              "h-4 w-4",
-              isDarkMode ? "text-sky-400" : "text-sky-700",
+              "flex items-center gap-2 rounded-xl px-3 py-2",
+              isDarkMode ? "bg-white/5" : "bg-slate-50",
             )}
-          />
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">
-              Data source
-            </p>
-            <p
-              className={cn(
-                "font-mono text-xs",
-                isDarkMode ? "text-slate-300" : "text-slate-700",
-              )}
-            >
-              ESP32 · MPU6050 · Firebase
-            </p>
+          >
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                Data source
+              </p>
+              <p
+                className={cn(
+                  "font-mono text-xs",
+                  isDarkMode ? "text-slate-300" : "text-slate-700",
+                )}
+              >
+                ESP32 · MPU6050 · Firebase
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         <div
           className={cn(

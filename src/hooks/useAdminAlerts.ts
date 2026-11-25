@@ -29,8 +29,10 @@ export function useAdminAlerts(sensors: SensorWithState[], user: User | null) {
     }
 
     const database = db;
+    const alertsPath =
+      process.env.NEXT_PUBLIC_FIREBASE_ALERTS_PATH || "/alerts";
     const alertsRef = query(
-      ref(database, "/alerts"),
+      ref(database, alertsPath),
       orderByChild("timestamp"),
       limitToLast(50),
     );
@@ -89,7 +91,9 @@ export function useAdminAlerts(sensors: SensorWithState[], user: User | null) {
           ? `Sensor ${sensor.name} unreachable`
           : `Sensor ${sensor.name} recovered`;
 
-      const alertRef = push(ref(database, "/alerts"));
+      const alertsPath =
+        process.env.NEXT_PUBLIC_FIREBASE_ALERTS_PATH || "/alerts";
+      const alertRef = push(ref(database, alertsPath));
       void set(alertRef, {
         sensorId: sensor.id,
         sensorName: sensor.name,

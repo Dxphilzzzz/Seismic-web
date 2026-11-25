@@ -22,13 +22,17 @@ export function useAnnouncements() {
 
   useEffect(() => {
     if (!db) return;
+    const announcementsPath =
+      process.env.NEXT_PUBLIC_FIREBASE_ANNOUNCEMENTS_PATH || "/announcements";
+    const activityLogsPath =
+      process.env.NEXT_PUBLIC_FIREBASE_ACTIVITY_LOGS_PATH || "/activityLogs";
     const announcementsQuery = query(
-      ref(db, "/announcements"),
+      ref(db, announcementsPath),
       orderByChild("createdAt"),
       limitToLast(20),
     );
     const activitiesQuery = query(
-      ref(db, "/activityLogs"),
+      ref(db, activityLogsPath),
       orderByChild("timestamp"),
       limitToLast(50),
     );
@@ -86,8 +90,12 @@ export function useAnnouncements() {
     }) => {
       if (!db) throw new Error("Firebase database is not configured.");
       const timestamp = Date.now();
-      const announcementRef = push(ref(db, "/announcements"));
-      const activityRef = push(ref(db, "/activityLogs"));
+      const announcementsPath =
+        process.env.NEXT_PUBLIC_FIREBASE_ANNOUNCEMENTS_PATH || "/announcements";
+      const activityLogsPath =
+        process.env.NEXT_PUBLIC_FIREBASE_ACTIVITY_LOGS_PATH || "/activityLogs";
+      const announcementRef = push(ref(db, announcementsPath));
+      const activityRef = push(ref(db, activityLogsPath));
       await Promise.all([
         set(announcementRef, {
           title,
@@ -124,9 +132,13 @@ export function useAnnouncements() {
     }) => {
       if (!db) throw new Error("Firebase database is not configured.");
       const timestamp = Date.now();
+      const announcementsPath =
+        process.env.NEXT_PUBLIC_FIREBASE_ANNOUNCEMENTS_PATH || "/announcements";
+      const activityLogsPath =
+        process.env.NEXT_PUBLIC_FIREBASE_ACTIVITY_LOGS_PATH || "/activityLogs";
       await Promise.all([
-        update(ref(db, `/announcements/${id}`), { title, message, tone }),
-        set(push(ref(db, "/activityLogs")), {
+        update(ref(db, `${announcementsPath}/${id}`), { title, message, tone }),
+        set(push(ref(db, activityLogsPath)), {
           type: "announcement_updated",
           message: `Updated announcement: ${title}`,
           timestamp,
@@ -149,9 +161,13 @@ export function useAnnouncements() {
     }) => {
       if (!db) throw new Error("Firebase database is not configured.");
       const timestamp = Date.now();
+      const announcementsPath =
+        process.env.NEXT_PUBLIC_FIREBASE_ANNOUNCEMENTS_PATH || "/announcements";
+      const activityLogsPath =
+        process.env.NEXT_PUBLIC_FIREBASE_ACTIVITY_LOGS_PATH || "/activityLogs";
       await Promise.all([
-        remove(ref(db, `/announcements/${id}`)),
-        set(push(ref(db, "/activityLogs")), {
+        remove(ref(db, `${announcementsPath}/${id}`)),
+        set(push(ref(db, activityLogsPath)), {
           type: "announcement_removed",
           message: `Removed announcement: ${title}`,
           timestamp,

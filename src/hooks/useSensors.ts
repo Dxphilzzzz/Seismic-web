@@ -24,7 +24,9 @@ export function useSensors() {
       return;
     }
 
-    const sensorsRef = ref(db, "/sensors");
+    const sensorsPath =
+      process.env.NEXT_PUBLIC_FIREBASE_SENSORS_PATH || "/sensors";
+    const sensorsRef = ref(db, sensorsPath);
     const unsub = onValue(
       sensorsRef,
       (snapshot) => {
